@@ -4,7 +4,7 @@ import {
   EllipsisVerticalIcon,
 } from "@heroicons/react/24/solid";
 import reactLogo from "../assets/react.svg"; // Import the SVG file
-import { useState, useContext, Children, createContext } from "react";
+import { useContext, createContext } from "react";
 
 // Define context type for sidebar expansion state
 const sidebarContext = createContext<{ expanded: boolean } | undefined>(
@@ -12,12 +12,22 @@ const sidebarContext = createContext<{ expanded: boolean } | undefined>(
 );
 
 // Main Sidebar component
-export default function Sidebar({ children }: { children: React.ReactNode }) {
-  const [expanded, setExpanded] = useState(true); // State to manage sidebar expansion
-
+export default function Sidebar({
+  children,
+  expanded,
+  setExpanded,
+}: {
+  children: React.ReactNode;
+  expanded: boolean;
+  setExpanded: (value: boolean) => void;
+}) {
   return (
-    <aside className={`h-screen transition-all ${expanded ? "w-64" : "w-24"}`}>
-      <nav className="h-full flex flex-col bg-white border-r shadow-sm">
+    <aside
+      className={`fixed top-0 left-0 bottom-0 transition-all ${
+        expanded ? "w-64" : "w-24"
+      }`}
+    >
+      <nav className="h-full flex flex-col border-r shadow-sm">
         {/* Sidebar Header Section */}
         <div className="p-1 m-3 flex justify-center items-center">
           <img
@@ -31,10 +41,9 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
           {expanded && (
             <h3 className="text-base px-3 font-bold leading-2">MySTMPBDG</h3>
           )}
-
           <button
-            onClick={() => setExpanded((curr) => !curr)}
-            className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200"
+            onClick={() => setExpanded(!expanded)}
+            className="p-2 rounded-lg bg-calypsoLight-700 hover:bg-calypsoLight-500"
           >
             {expanded ? (
               <Bars3Icon className="w-6 h-6" />
@@ -47,11 +56,14 @@ export default function Sidebar({ children }: { children: React.ReactNode }) {
 
         {/* Sidebar Content Section */}
         <sidebarContext.Provider value={{ expanded }}>
-          <ul className="flex-1 p valuex-1 py-2 overflow-y-auto">{children}</ul>
+          <ul className="flex-1 h-full justify-between p valuex-1 py-2 overflow-y-auto">
+            {children}
+          </ul>
         </sidebarContext.Provider>
         {/* End of Sidebar Content Section */}
+
         {/* Account Section */}
-        <div className={`border-t flex p-3 items-center`}>
+        <div className={`border-t border-t-salmon-500 flex p-3 items-center`}>
           <img
             src="https://ui-avatars.com/api/?background=c7d2fe&color=3730a3&bold=true&name=Dimas+Faiz"
             alt="Profile"
@@ -93,10 +105,10 @@ export function SidebarItem({
 }) {
   const { expanded } = useContext(sidebarContext)!;
 
-  const itemClasses = `relative flex items-center py-2 px-3 my-1 font-medium rounded-md cursor-pointer transition-colors ${
+  const itemClasses = `relative flex items-center py-3 px-3 my-1 font-medium rounded-md cursor-pointer transition-colors ${
     active
-      ? "bg-gradient-to-tr from-indigo-200 to-indigo-100 text-indigo-800"
-      : "hover:bg-indigo-50 text-gray-600"
+      ? "bg-gradient-to-tr from-calypsoLight-700 to-calypsoLight-800 text-grey-800"
+      : "hover:bg-calypsoLight-900 text-grey-600"
   }`;
 
   return (
@@ -117,7 +129,7 @@ export function SidebarItem({
       )}
       {alert && (
         <div
-          className={`absolute right-2 w-2 h-2 rounded bg-indigo-400 ${
+          className={`absolute right-2 w-2 h-2 rounded bg-calypsoLight-100 ${
             expanded ? "" : "top-2"
           }`}
         ></div>
