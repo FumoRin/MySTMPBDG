@@ -32,10 +32,10 @@ function App() {
         <div
           className={`flex-1 transition-all ${expanded ? "ml-64" : "ml-24"}`}
         >
-          {" "}
-          {/* Adjust margin based on sidebar state */}
-          <HomeHeader />
-          <HomeMain />
+          <HomeHeader expanded={expanded} />
+          <div className="pt-16">
+            <HomeMain />
+          </div>
         </div>
       </div>
     </>
