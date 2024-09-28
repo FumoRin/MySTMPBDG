@@ -1,10 +1,7 @@
-import {
-  Bars3Icon,
-  Bars2Icon,
-  EllipsisVerticalIcon,
-} from "@heroicons/react/24/solid";
+import { Menu, ChevronLeft, MoreVertical } from "lucide-react";
 import reactLogo from "../assets/react.svg"; // Import the SVG file
 import { useContext, createContext } from "react";
+import { Link } from "react-router-dom";
 
 // Define context type for sidebar expansion state
 const sidebarContext = createContext<{ expanded: boolean } | undefined>(
@@ -46,9 +43,9 @@ export default function Sidebar({
             className="p-2 rounded-lg bg-calypsoLight-700 hover:bg-calypsoLight-500"
           >
             {expanded ? (
-              <Bars3Icon className="w-6 h-6" />
+              <ChevronLeft className="w-6 h-6" />
             ) : (
-              <Bars2Icon className="w-6 h-6 mx-auto" />
+              <Menu className="w-6 h-6 mx-auto" />
             )}
           </button>
         </div>
@@ -79,11 +76,11 @@ export default function Sidebar({
               edu.dimasfaizsatria@gmail.com
             </span>
           </div>
-          <button className="ml-auto p-1">
-            <EllipsisVerticalIcon
-              className={`${expanded ? "w-5 h-5 text-gray-500" : ""}`}
-            />
-          </button>
+          {expanded && (
+            <button className="ml-auto p-1">
+              <MoreVertical className="w-5 h-5 text-gray-500" />
+            </button>
+          )}
         </div>
         {/* End of Account Section */}
       </nav>
@@ -97,11 +94,13 @@ export function SidebarItem({
   text,
   active,
   alert,
+  to,
 }: {
   icon?: React.ReactNode;
   text?: string;
   active?: boolean;
   alert?: boolean;
+  to?: string;
 }) {
   const { expanded } = useContext(sidebarContext)!;
 
@@ -134,6 +133,7 @@ export function SidebarItem({
           }`}
         ></div>
       )}
+      {to && <Link to={to} className="absolute inset-0" />}
     </li>
   );
 }

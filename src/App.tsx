@@ -1,44 +1,49 @@
 import HomeHeader from "./components/home/homeHeader";
 import HomeMain from "./components/home/homeMain";
 import Sidebar, { SidebarItem } from "./components/sidebar";
+import SchedulePage from "./components/schedule/schedulePage";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom"; // Ensure correct import
 import { useState } from "react";
 import {
-  HomeIcon,
-  BuildingLibraryIcon,
-  LifebuoyIcon,
-  Cog6ToothIcon,
-  ChatBubbleLeftRightIcon,
-  CalendarIcon,
-  DocumentIcon,
-} from "@heroicons/react/24/solid";
+  Home,
+  Library,
+  LifeBuoy,
+  Settings,
+  MessageSquare,
+  Calendar,
+  FileText,
+} from "lucide-react";
 
 function App() {
   const [expanded, setExpanded] = useState(true); // State to manage sidebar expansion
 
   return (
-    <>
+    <Router>
       <div className="flex">
         <Sidebar expanded={expanded} setExpanded={setExpanded}>
           <hr className="my-2" />
-          <SidebarItem icon={<HomeIcon />} text="Home" active={true} />
-          <SidebarItem icon={<BuildingLibraryIcon />} text="Materi" />
-          <SidebarItem icon={<DocumentIcon />} text="Tugas" />
-          <SidebarItem icon={<CalendarIcon />} text="Jadwal" />
-          <SidebarItem icon={<ChatBubbleLeftRightIcon />} text="Chat" alert />
+          <SidebarItem icon={<Home />} text="Home" to="/" active={true} />
+          <SidebarItem icon={<Library />} text="Materi" />
+          <SidebarItem icon={<FileText />} text="Tugas" />
+          <SidebarItem icon={<Calendar />} text="Jadwal" to="/jadwal" />
+          <SidebarItem icon={<MessageSquare />} text="Chat" alert />
           <hr className="my-3" />
-          <SidebarItem icon={<LifebuoyIcon />} text="Bantuan" />
-          <SidebarItem icon={<Cog6ToothIcon />} text="Settings" />
+          <SidebarItem icon={<LifeBuoy />} text="Bantuan" />
+          <SidebarItem icon={<Settings />} text="Settings" />
         </Sidebar>
         <div
           className={`flex-1 transition-all ${expanded ? "ml-64" : "ml-24"}`}
         >
           <HomeHeader expanded={expanded} />
           <div className="pt-16">
-            <HomeMain />
+            <Routes>
+              <Route path="/" element={<HomeMain />} />
+              <Route path="/jadwal" element={<SchedulePage />} />
+            </Routes>
           </div>
         </div>
       </div>
-    </>
+    </Router>
   );
 }
 
