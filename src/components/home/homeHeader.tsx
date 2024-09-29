@@ -1,4 +1,4 @@
-import clock from "./clock";
+import clock from "./src/clock";
 
 export function HomeHeader({ expanded }: { expanded: boolean }) {
   return (

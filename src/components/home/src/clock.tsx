@@ -7,9 +7,9 @@ export default function clock() {
     setInterval(() => {
       const dateObject = new Date();
 
-      const hour = dateObject.getHours();
-      const minute = dateObject.getMinutes();
-      const second = dateObject.getSeconds();
+      const hour = String(dateObject.getHours()).padStart(2, "0");
+      const minute = String(dateObject.getMinutes()).padStart(2, "0");
+      const second = String(dateObject.getSeconds()).padStart(2, "0");
 
       const currentTime = hour + " : " + minute + " : " + second;
 
