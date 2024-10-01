@@ -1,6 +1,7 @@
 import HomeHeader from "./components/home/homeHeader";
 import HomeMain from "./components/home/homeMain";
 import Sidebar, { SidebarItem } from "./components/sidebar";
+import ChatApp from "./components/chatapp/chatApp";
 import SchedulePage from "./components/schedule/schedulePage";
 import {
   BrowserRouter as Router,
@@ -86,6 +87,7 @@ function AppContent() {
           <Routes>
             <Route path="/" element={<HomeMain />} />
             <Route path="/jadwal" element={<SchedulePage />} />
+            <Route path="/chat" element={<ChatApp />} />
           </Routes>
         </div>
       </div>
