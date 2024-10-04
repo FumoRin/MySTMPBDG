@@ -12,12 +12,8 @@ import {
 import { useState } from "react";
 import {
   Home,
-  Library,
-  LifeBuoy,
-  Settings,
   MessageSquare,
   Calendar,
-  FileText,
 } from "lucide-react";
 
 function App() {
@@ -43,18 +39,6 @@ function AppContent() {
           active={location.pathname === "/"}
         />
         <SidebarItem
-          icon={<Library />}
-          text="Materi"
-          to="/materi"
-          active={location.pathname === "/materi"}
-        />
-        <SidebarItem
-          icon={<FileText />}
-          text="Tugas"
-          to="/tugas"
-          active={location.pathname === "/tugas"}
-        />
-        <SidebarItem
           icon={<Calendar />}
           text="Jadwal"
           to="/jadwal"
@@ -66,19 +50,6 @@ function AppContent() {
           to="/chat"
           active={location.pathname === "/chat"}
           alert
-        />
-        <hr className="my-3" />
-        <SidebarItem
-          icon={<LifeBuoy />}
-          text="Bantuan"
-          to="/bantuan"
-          active={location.pathname === "/bantuan"}
-        />
-        <SidebarItem
-          icon={<Settings />}
-          text="Settings"
-          to="/settings"
-          active={location.pathname === "/settings"}
         />
       </Sidebar>
       <div className={`flex-1 transition-all ${expanded ? "ml-64" : "ml-24"}`}>

@@ -1,4 +1,10 @@
-import { Menu, ChevronLeft, MoreVertical } from "lucide-react";
+import {
+  Menu,
+  ChevronLeft,
+  MoreVertical,
+  LifeBuoy,
+  Settings,
+} from "lucide-react";
 import reactLogo from "../assets/react.svg"; // Import the SVG file
 import { useContext, createContext } from "react";
 import { Link } from "react-router-dom";
@@ -53,8 +59,23 @@ export default function Sidebar({
 
         {/* Sidebar Content Section */}
         <sidebarContext.Provider value={{ expanded }}>
-          <ul className="flex-1 h-full justify-between p valuex-1 py-2 overflow-y-auto">
-            {children}
+          <ul className="flex-1 h-full flex flex-col justify-between px-1 py-2 overflow-y-auto">
+            <div>{children}</div>
+            <div>
+              <hr className="my-3" />
+              <SidebarItem
+                icon={<LifeBuoy />}
+                text="Bantuan"
+                to="/bantuan"
+                active={location.pathname === "/bantuan"}
+              />
+              <SidebarItem
+                icon={<Settings />}
+                text="Settings"
+                to="/settings"
+                active={location.pathname === "/settings"}
+              />
+            </div>
           </ul>
         </sidebarContext.Provider>
         {/* End of Sidebar Content Section */}
