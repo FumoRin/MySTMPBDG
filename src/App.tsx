@@ -10,11 +10,11 @@ import {
   useLocation,
 } from "react-router-dom"; // Ensure correct import
 import { useState } from "react";
-import {
-  Home,
-  MessageSquare,
-  Calendar,
-} from "lucide-react";
+import { Home, MessageSquare, Calendar } from "lucide-react";
+
+function SchedulePageWrapper({ expanded }: { expanded: boolean }) {
+  return <SchedulePage expanded={expanded} />;
+}
 
 function App() {
   return (
@@ -57,7 +57,10 @@ function AppContent() {
         <div className="pt-16">
           <Routes>
             <Route path="/" element={<HomeMain />} />
-            <Route path="/jadwal" element={<SchedulePage />} />
+            <Route
+              path="/jadwal"
+              element={<SchedulePageWrapper expanded={expanded} />}
+            />
             <Route path="/chat" element={<ChatApp />} />
           </Routes>
         </div>

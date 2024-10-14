@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
+interface SchedulePageProps {
+  expanded: boolean;
+}
+
 const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
 const scheduleData = [
@@ -36,7 +40,7 @@ const scheduleData = [
   },
 ];
 
-const SchedulePage = () => {
+export default function SchedulePage({ expanded }: SchedulePageProps) {
   const [currentDay, setCurrentDay] = useState(0);
 
   const handlePrevDay = () => {
@@ -48,9 +52,8 @@ const SchedulePage = () => {
   };
 
   return (
-    <div className="schedule-page mt-5 mx-5">
-      <h1 className="text-center text-3xl font-bold">Jadwal Pelajaran</h1>
-      <div className="container mx-auto p-4">
+    <div className="flex flex-col h-screen">
+      <div className="flex-grow overflow-auto p-4 pb-20">
         <h1 className="text-2xl font-bold mb-4">
           School Schedule - {daysOfWeek[currentDay]}
         </h1>
@@ -100,7 +103,13 @@ const SchedulePage = () => {
             </tbody>
           </table>
         </div>
-        <div className="flex justify-between items-center mt-4">
+      </div>
+      <div
+        className={`bg-white border-t p-4 fixed bottom-0 right-0 z-10 transition-all ${
+          expanded ? "left-64" : "left-24"
+        }`}
+      >
+        <div className="flex justify-between items-center max-w-screen-xl mx-auto">
           <button
             onClick={handlePrevDay}
             className="flex items-center px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
@@ -134,6 +143,4 @@ const SchedulePage = () => {
       </div>
     </div>
   );
-};
-
-export default SchedulePage;
+}
