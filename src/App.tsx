@@ -4,6 +4,7 @@ import Sidebar, { SidebarItem } from "./components/sidebar";
 import ChatApp from "./components/chatapp/chatApp";
 import SchedulePage from "./components/schedule/schedulePage";
 import AuthPage from "./components/auth/authPage";
+import AdminPage from "./components/admin/adminPage";
 
 import {
   BrowserRouter as Router,
@@ -13,7 +14,14 @@ import {
   Navigate,
 } from "react-router-dom"; // Ensure correct import
 import { useState, useEffect } from "react";
-import { Home, MessageSquare, Calendar } from "lucide-react";
+import {
+  Home,
+  MessageSquare,
+  Calendar,
+  Users,
+  Bell,
+  Layout,
+} from "lucide-react";
 
 function SchedulePageWrapper({ expanded }: { expanded: boolean }) {
   return <SchedulePage expanded={expanded} />;
@@ -31,6 +39,55 @@ function AppContent() {
   const [expanded, setExpanded] = useState(true); // State to manage sidebar expansion
   const location = useLocation();
   const isLoginPage = location.pathname === "/login";
+  const isAdminPage = location.pathname.startsWith("/admin");
+
+  // Get navigation items based on whether we're in admin section or main app
+  const getNavigationItems = () => {
+    if (isAdminPage) {
+      return [
+        {
+          icon: <Layout />,
+          text: "Dashboard",
+          to: "/admin",
+        },
+        {
+          icon: <Users />,
+          text: "User Management",
+          to: "/admin/users",
+        },
+        {
+          icon: <Bell />,
+          text: "Announcements",
+          to: "/admin/announcements",
+        },
+        {
+          icon: <Calendar />,
+          text: "Schedule",
+          to: "/admin/schedule",
+        },
+      ];
+    }
+
+    // Regular app navigation
+    return [
+      {
+        icon: <Home />,
+        text: "Home",
+        to: "/home",
+      },
+      {
+        icon: <Calendar />,
+        text: "Jadwal",
+        to: "/jadwal",
+      },
+      {
+        icon: <MessageSquare />,
+        text: "Chat",
+        to: "/chat",
+        alert: true,
+      },
+    ];
+  };
 
   useEffect(() => {
     if (isLoginPage) {
@@ -47,25 +104,16 @@ function AppContent() {
         <>
           <Sidebar expanded={expanded} setExpanded={setExpanded}>
             <hr className="my-2" />
-            <SidebarItem
-              icon={<Home />}
-              text="Home"
-              to="/home"
-              active={location.pathname === "/home"}
-            />
-            <SidebarItem
-              icon={<Calendar />}
-              text="Jadwal"
-              to="/jadwal"
-              active={location.pathname === "/jadwal"}
-            />
-            <SidebarItem
-              icon={<MessageSquare />}
-              text="Chat"
-              to="/chat"
-              active={location.pathname === "/chat"}
-              alert
-            />
+            {getNavigationItems().map((item, index) => (
+              <SidebarItem
+                key={index}
+                icon={item.icon}
+                text={item.text}
+                to={item.to}
+                active={location.pathname === item.to}
+                alert={item.alert}
+              />
+            ))}
           </Sidebar>
           <HomeHeader expanded={expanded} />
         </>
@@ -89,6 +137,12 @@ function AppContent() {
             />
             <Route path="/chat" element={<ChatApp />} />
             <Route path="/login" element={<AuthPage />} />
+
+            {/* Admin routes */}
+            <Route path="/admin" element={<AdminPage />} />
+            <Route path="/admin/users" element={<AdminPage />} />
+            <Route path="/admin/announcements" element={<AdminPage />} />
+            <Route path="/admin/schedule" element={<AdminPage />} />
           </Routes>
         </div>
       </div>
