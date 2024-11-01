@@ -17,7 +17,7 @@ export default function HomeMain() {
   ];
 
   return (
-    <div className="flex h-screen m-4">
+    <div className="flex h-full m-4">
       {/* Main Content Section */}
       <div className="flex-1 flex flex-col h-full">
         {/* Overview Section */}

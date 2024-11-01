@@ -159,7 +159,7 @@ const ChatApp: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="h-full flex bg-gray-100">
       <ChatList
         chats={chats}
         setActiveChat={setActiveChat}

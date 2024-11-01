@@ -52,7 +52,7 @@ export default function SchedulePage({ expanded }: SchedulePageProps) {
   };
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-full">
       <div className="flex-grow overflow-auto p-4 pb-20">
         <h1 className="text-2xl font-bold mb-4">
           School Schedule - {daysOfWeek[currentDay]}
@@ -105,7 +105,7 @@ export default function SchedulePage({ expanded }: SchedulePageProps) {
         </div>
       </div>
       <div
-        className={`bg-white border-t p-4 fixed bottom-0 right-0 z-10 transition-all ${
+        className={`bg-white border-t p-4 bottom-0 right-0 z-10 transition-all ${
           expanded ? "left-64" : "left-24"
         }`}
       >
