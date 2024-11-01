@@ -5,6 +5,9 @@ import ChatApp from "./components/chatapp/chatApp";
 import SchedulePage from "./components/schedule/schedulePage";
 import AuthPage from "./components/auth/authPage";
 import AdminPage from "./components/admin/adminPage";
+import AdminUsersPage from "./components/admin/management/userPage";
+import AdminAnnouncementsPage from "./components/admin/management/announcemenPage";
+import AdminSchedulePage from "./components/admin/management/schedulePage";
 
 import {
   BrowserRouter as Router,
@@ -21,6 +24,7 @@ import {
   Users,
   Bell,
   Layout,
+  MonitorCog,
 } from "lucide-react";
 
 function SchedulePageWrapper({ expanded }: { expanded: boolean }) {
@@ -46,6 +50,11 @@ function AppContent() {
     if (isAdminPage) {
       return [
         {
+          icon: <Home />,
+          text: "Home",
+          to: "/home",
+        },
+        {
           icon: <Layout />,
           text: "Dashboard",
           to: "/admin",
@@ -70,6 +79,11 @@ function AppContent() {
 
     // Regular app navigation
     return [
+      {
+        icon: <MonitorCog />,
+        text: "Administration",
+        to: "/admin",
+      },
       {
         icon: <Home />,
         text: "Home",
@@ -119,12 +133,12 @@ function AppContent() {
         </>
       )}
       <div
-        className={`flex-1 transition-all ${
+        className={`flex-1 h-screen transition-all ${
           isLoginPage ? "" : expanded ? "ml-64" : "ml-24"
         }`}
       >
         <div
-          className={`container items-center min-w-full ${
+          className={`container items-center h-full min-w-full ${
             isLoginPage ? "" : "pt-16"
           } `}
         >
@@ -140,9 +154,12 @@ function AppContent() {
 
             {/* Admin routes */}
             <Route path="/admin" element={<AdminPage />} />
-            <Route path="/admin/users" element={<AdminPage />} />
-            <Route path="/admin/announcements" element={<AdminPage />} />
-            <Route path="/admin/schedule" element={<AdminPage />} />
+            <Route path="/admin/users" element={<AdminUsersPage />} />
+            <Route
+              path="/admin/announcements"
+              element={<AdminAnnouncementsPage />}
+            />
+            <Route path="/admin/schedule" element={<AdminSchedulePage />} />
           </Routes>
         </div>
       </div>
