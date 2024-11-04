@@ -1,51 +1,83 @@
-import { useState, ChangeEvent } from "react";
-import { loginFields, Field } from "../formFields";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import FormAction from "./formAction";
 import FormExtra from "./formExtra";
 import Input from "./input";
+import { loginFields } from "../formFields";
+import { useAuth } from "../../../context/authContext";
 
-interface LoginState {
-  [key: string]: string;
-}
+const Login = () => {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { login } = useAuth();
+  const navigate = useNavigate();
 
-const fields: Field[] = loginFields;
-let fieldsState: LoginState = {};
-fields.forEach((field) => (fieldsState[field.id] = ""));
-
-export default function Login() {
-  const [loginState, setLoginState] = useState<LoginState>(fieldsState);
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setLoginState({ ...loginState, [e.target.id]: e.target.value });
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    authenticateUser();
-  };
+    setError("");
+    setIsLoading(true);
 
-  const authenticateUser = () => {};
+    try {
+      const response = await fetch("http://localhost:3000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Invalid credentials");
+      }
+
+      const data = await response.json();
+      login(data.token, data.user);
+
+      if (data.user.role === "sysadmin") {
+        navigate("/admin");
+      } else {
+        navigate("/dashboard");
+      }
+    } catch (err) {
+      setError("Invalid username or password");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <form className="mt-8 ">
+    <form className="mt-8" onSubmit={handleSubmit}>
+      {error && (
+        <div className="mb-4 text-red-500 text-sm text-center">{error}</div>
+      )}
+
       <div>
-        {fields.map((field) => (
+        {loginFields.map((field) => (
           <Input
             key={field.id}
-            handleChange={handleChange}
-            value={loginState[field.id]}
-            labelText={field.labelText}
-            labelFor={field.labelFor}
-            id={field.id}
-            name={field.name}
+            label={field.labelText}
             type={field.type}
-            isRequired={field.isRequired}
+            value={field.id === "username" ? username : password}
+            onChange={(e) => {
+              const value = e.target.value;
+              field.id === "username" ? setUsername(value) : setPassword(value);
+              setError(""); // Clear error when user types
+            }}
             placeholder={field.placeholder}
+            disabled={isLoading}
           />
         ))}
       </div>
+
       <FormExtra />
-      <FormAction handleSubmit={handleSubmit} text="Login" />
+      <FormAction
+        isLoading={isLoading}
+        text={isLoading ? "Logging in..." : "Login"}
+      />
     </form>
   );
-}
+};
+
+export default Login;

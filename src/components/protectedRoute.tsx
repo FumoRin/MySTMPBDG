@@ -1,20 +1,20 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "../context/authContext";
 
 interface ProtectedRouteProps {
-  isAdmin: boolean;
   children: React.ReactNode;
 }
+export default function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const { user } = useAuth();
+  const location = useLocation();
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
-  isAdmin,
-  children,
-}) => {
-  if (!isAdmin) {
-    // Redirect to home if user is not admin
-    return <Navigate to="/home" replace />;
+  if (!user) {
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;
-};
-
-export default ProtectedRoute;
+}

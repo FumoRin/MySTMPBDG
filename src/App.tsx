@@ -8,6 +8,7 @@ import AdminPage from "./components/admin/adminPage";
 import AdminUsersPage from "./components/admin/management/userPage";
 import AdminAnnouncementsPage from "./components/admin/management/announcemenPage";
 import AdminSchedulePage from "./components/admin/management/schedulePage";
+import { AuthProvider } from "./context/authContext";
 
 import {
   BrowserRouter as Router,
@@ -34,7 +35,9 @@ function SchedulePageWrapper({ expanded }: { expanded: boolean }) {
 function App() {
   return (
     <Router>
-      <AppContent />
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
     </Router>
   );
 }
@@ -49,11 +52,6 @@ function AppContent() {
   const getNavigationItems = () => {
     if (isAdminPage) {
       return [
-        {
-          icon: <Home />,
-          text: "Home",
-          to: "/home",
-        },
         {
           icon: <Layout />,
           text: "Dashboard",

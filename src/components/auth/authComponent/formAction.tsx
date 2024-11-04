@@ -1,33 +1,20 @@
-import React from "react";
-
 interface FormActionProps {
-  handleSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
-  type?: "Button" | "Input";
-  action?: "submit" | "reset" | "button";
+  isLoading: boolean;
   text: string;
 }
 
-export default function FormAction({
-  handleSubmit,
-  type = "Button",
-  action = "submit",
-  text,
-}: FormActionProps): JSX.Element {
+const FormAction = ({ isLoading, text }: FormActionProps) => {
   return (
-    <>
-      {type === "Button" ? (
-        <button
-          type={action}
-          className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-calypsoLight-300 hover:bg-calypsoLight-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 mt-10"
-          onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
-            handleSubmit(e as any)
-          }
-        >
-          {text}
-        </button>
-      ) : (
-        <></>
-      )}
-    </>
+    <div className="pt-4">
+      <button
+        type="submit"
+        className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50"
+        disabled={isLoading}
+      >
+        {text}
+      </button>
+    </div>
   );
-}
+};
+
+export default FormAction;
