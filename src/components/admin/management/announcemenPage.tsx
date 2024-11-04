@@ -1,6 +1,16 @@
 import { Plus, Search, Calendar } from "lucide-react";
+import { useState } from "react";
+import AnnouncementModal from "./components/addAnnouncement";
 
 export default function AdminAnnouncementsPage() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleCreateAnnouncement = (announcementData: any) => {
+    // Add logic to save announcement
+    console.log(announcementData);
+    setIsModalOpen(false);
+  };
+
   const announcements = [
     {
       id: 1,
@@ -16,11 +26,20 @@ export default function AdminAnnouncementsPage() {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Announcement Management</h1>
-        <button className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg"
+        >
           <Plus size={20} />
           Create Announcement
         </button>
       </div>
+
+      <AnnouncementModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleCreateAnnouncement}
+      />
 
       {/* Search Bar */}
       <div className="flex gap-4 mb-6">
