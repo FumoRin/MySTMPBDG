@@ -8,6 +8,7 @@ export default function AdminSchedulePage() {
       teacher: "John Doe",
       time: "08:00 - 09:30",
       day: "Monday",
+      class: "XII - SIJA - B",
       room: "Room 101",
     },
     // Add more mock data
@@ -33,7 +34,10 @@ export default function AdminSchedulePage() {
         </select>
         <select className="border rounded-lg px-4 py-2">
           <option>All Teachers</option>
-          {/* Add teacher options */}
+        </select>
+        <select className="border rounded-lg px-4 py-2">
+          <option>All Class</option>
+          <option>XII - SIJA - B</option>
         </select>
       </div>
 
@@ -54,6 +58,9 @@ export default function AdminSchedulePage() {
               <div className="flex items-center gap-2 text-gray-600">
                 <Clock size={16} />
                 {schedule.time}
+              </div>
+              <div className="flex items-center gap-2 text-gray-600">
+                Class: {schedule.class}
               </div>
               <div className="text-gray-600">Room: {schedule.room}</div>
             </div>
