@@ -10,6 +10,7 @@ import AdminAnnouncementsPage from "./components/admin/management/announcemenPag
 import AdminSchedulePage from "./components/admin/management/schedulePage";
 import { AuthProvider } from "./context/authContext";
 
+import { Toaster } from "react-hot-toast";
 import {
   BrowserRouter as Router,
   Route,
@@ -37,6 +38,55 @@ function App() {
     <Router>
       <AuthProvider>
         <AppContent />
+        <Toaster
+          position="top-right"
+          reverseOrder={false}
+          gutter={8}
+          containerClassName=""
+          containerStyle={{}}
+          toastOptions={{
+            // Default options for all toasts
+            className: "",
+            duration: 5000,
+            style: {
+              background: "#363636",
+              color: "#fff",
+            },
+            // Customize specific toast types
+            success: {
+              duration: 3000,
+              style: {
+                background: "#1f2937",
+                border: "1px solid #059669",
+                color: "#fff",
+              },
+              iconTheme: {
+                primary: "#059669",
+                secondary: "#fff",
+              },
+            },
+            error: {
+              duration: 4000,
+              style: {
+                background: "#1f2937",
+                border: "1px solid #dc2626",
+                color: "#fff",
+              },
+              iconTheme: {
+                primary: "#dc2626",
+                secondary: "#fff",
+              },
+            },
+            loading: {
+              duration: Infinity,
+              style: {
+                background: "#1f2937",
+                border: "1px solid #2563eb",
+                color: "#fff",
+              },
+            },
+          }}
+        />
       </AuthProvider>
     </Router>
   );

@@ -1,6 +1,15 @@
 import { Search, Filter, UserPlus, MoreVertical } from "lucide-react";
+import { useState } from "react";
+import AddUserModal from "./components/addUser";
 
 export default function AdminUsersPage() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const handleCreateUser = (userData: any) => {
+    // Add logic to save user
+    console.log(userData);
+    setIsModalOpen(false);
+  };
+
   const users = [
     {
       id: 1,
@@ -23,10 +32,18 @@ export default function AdminUsersPage() {
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">User Management</h1>
-        <button className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg"
+        >
           <UserPlus size={20} />
           Add New User
         </button>
+        <AddUserModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={handleCreateUser}
+        />
       </div>
 
       {/* Search and Filter Bar */}
