@@ -1,5 +1,6 @@
 import { UserPlus } from "lucide-react";
-import { useState } from "react";
+import { useState, Fragment } from "react";
+import { Transition } from "@headlessui/react";
 import { EyeOff, Eye } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -109,115 +110,155 @@ export default function AddUserModal({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Create New Users</h2>
-          <button
+    <Transition appear show={isOpen} as={Fragment}>
+      <div className="fixed inset-0 z-50 overflow-y-auto">
+        {/* Backdrop */}
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
+        >
+          <div
+            className="fixed inset-0 bg-black/50"
+            aria-hidden="true"
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+          />
+        </Transition.Child>
+
+        {/* Modal */}
+        <div className="fixed inset-0 flex items-center justify-center p-4">
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0 scale-95"
+            enterTo="opacity-100 scale-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100 scale-100"
+            leaveTo="opacity-0 scale-95"
           >
-            <UserPlus size={20} />
-          </button>
+            <div
+              className="bg-white rounded-lg p-6 w-full max-w-md relative transform transition-all"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">Create New Users</h2>
+                <button
+                  onClick={onClose}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <UserPlus size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit}>
+                {error && (
+                  <div className="mb-4 p-2 bg-red-100 text-red-700 rounded">
+                    {error}
+                  </div>
+                )}
+                <div className="space-y-4">
+                  {/* Username Field */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Username
+                    </label>
+                    <input
+                      type="text"
+                      value={user.username}
+                      onChange={(e) =>
+                        setUser({ ...user, username: e.target.value })
+                      }
+                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                      required
+                    />
+                  </div>
+
+                  {/* Password Field */}
+                  <div className="relative">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Password
+                    </label>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={user.password}
+                      onChange={(e) =>
+                        setUser({ ...user, password: e.target.value })
+                      }
+                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 pr-10"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-2 top-[70%] transform -translate-y-1/2"
+                    >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+
+                  {/* Email Field */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      value={user.email}
+                      onChange={(e) =>
+                        setUser({ ...user, email: e.target.value })
+                      }
+                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                      required
+                    />
+                  </div>
+
+                  {/* Role Field */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Role
+                    </label>
+                    <select
+                      value={user.role}
+                      onChange={(e) =>
+                        setUser({ ...user, role: e.target.value as userRole })
+                      }
+                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                    >
+                      <option value="student">Student</option>
+                      <option value="teacher">Teacher</option>
+                      <option value="sysadmin">Sysadmin</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Form Buttons */}
+                <div className="mt-6 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
+                    disabled={loading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 text-sm text-white bg-blue-500 rounded-md hover:bg-blue-600 disabled:bg-blue-300"
+                    disabled={loading}
+                  >
+                    {loading ? "Creating..." : "Create"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </Transition.Child>
         </div>
-        <form onSubmit={handleSubmit}>
-          {error && (
-            <div className="mb-4 p-2 bg-red-100 text-red-700 rounded">
-              {error}
-            </div>
-          )}
-          <div className="space-y-4">
-            {/* Username Field */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Username
-              </label>
-              <input
-                type="text"
-                value={user.username}
-                onChange={(e) => setUser({ ...user, username: e.target.value })}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-                required
-              />
-            </div>
-
-            {/* password Field */}
-            <div className="relative">
-              <label className="block text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <input
-                type={showPassword ? "text" : "password"}
-                value={user.password}
-                onChange={(e) => setUser({ ...user, password: e.target.value })}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 pr-10"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-2 top-[70%] transform -translate-y-1/2"
-              >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
-            </div>
-
-            {/* Email Field */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Email
-              </label>
-              <input
-                type="text"
-                value={user.email}
-                onChange={(e) => setUser({ ...user, email: e.target.value })}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-                required
-              />
-            </div>
-
-            {/* Role Field */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Role
-              </label>
-              <select
-                value={user.role}
-                onChange={(e) =>
-                  setUser({ ...user, role: e.target.value as userRole })
-                }
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-              >
-                <option value="student">Student</option>
-                <option value="teacher">Teacher</option>
-                <option value="sysadmin">Sysadmin</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Form Buttons */}
-          <div className="mt-6 flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
-              disabled={loading}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 text-sm text-white bg-blue-500 rounded-md hover:bg-blue-600 disabled:bg-blue-300"
-              disabled={loading}
-            >
-              {loading ? "Creating..." : "Create"}
-            </button>
-          </div>
-        </form>
       </div>
-    </div>
+    </Transition>
   );
 }
