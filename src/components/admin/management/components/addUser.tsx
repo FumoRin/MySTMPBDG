@@ -18,6 +18,9 @@ interface UserForm {
   name: string;
   email: string;
   role: userRole;
+  profile: {
+    full_name: string;
+  };
   student_info?: {
     department?: string;
     generation?: number;
@@ -55,6 +58,7 @@ export default function AddUserModal({
     name: "",
     email: "",
     role: "student",
+    profile: { full_name: "" },
     student_info: { department: "", generation: 0, class: "" },
     teacher_info: { department: "", subjects: [""] },
   });
@@ -63,6 +67,38 @@ export default function AddUserModal({
     e.preventDefault();
     setError("");
     setLoading(true);
+
+    // Ensure all required fields are populated
+    const userToSubmit = {
+      ...user,
+      profile: {
+        ...user.profile,
+        // If full_name is empty, use username or a default value
+        full_name: user.profile.full_name || user.username || "New User",
+      },
+      // Ensure role-specific info is properly set
+      student_info:
+        user.role === "student"
+          ? user.student_info
+            ? {
+                ...user.student_info,
+                department: user.student_info.department || "",
+                generation: user.student_info.generation || 0,
+                class: user.student_info.class || "",
+              }
+            : undefined
+          : undefined,
+      teacher_info:
+        user.role === "teacher"
+          ? {
+              ...user.teacher_info,
+              department: user.teacher_info?.department || "",
+              subjects: user.teacher_info?.subjects?.length
+                ? user.teacher_info.subjects
+                : [""],
+            }
+          : undefined,
+    };
 
     const loadingToast = toast.loading("Creating user...");
 
@@ -73,7 +109,7 @@ export default function AddUserModal({
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify(user),
+        body: JSON.stringify(userToSubmit),
       });
 
       if (!response.ok) {
@@ -88,20 +124,31 @@ export default function AddUserModal({
 
       onSubmit({
         username: data.user.username,
-        password: user.password,
+        password: userToSubmit.password,
         name: data.user.profile.full_name,
         email: data.user.email,
         role: data.user.role as userRole,
-        student_info: user.role === "student" ? user.student_info : undefined,
-        teacher_info: user.role === "teacher" ? user.teacher_info : undefined,
+        profile: data.user.profile,
+        student_info:
+          userToSubmit.role === "student"
+            ? userToSubmit.student_info
+            : undefined,
+        teacher_info:
+          userToSubmit.role === "teacher"
+            ? userToSubmit.teacher_info
+            : undefined,
       });
+
       onClose();
+
+      // Reset form to initial state
       setUser({
         username: "",
         password: "",
         name: "",
         email: "",
         role: "student",
+        profile: { full_name: "" },
         student_info: { department: "", generation: 0, class: "" },
         teacher_info: { department: "", subjects: [""] },
       });

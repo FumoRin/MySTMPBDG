@@ -1,8 +1,9 @@
 import { Search, Filter, UserPlus, MoreVertical } from "lucide-react";
 import { useEffect, useState } from "react";
-import AddUserModal from "./components/addUser";
 import toast from "react-hot-toast";
 import UserOptionsModal from "./components/userOptionModal";
+import AddUserModal from "./components/addUser";
+import DeleteModal from "./components/userDeleteModal";
 
 interface User {
   _id: string;
@@ -16,6 +17,8 @@ interface User {
 export default function AdminUsersPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
+  const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] =
+    useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [modalPosition, setModalPosition] = useState<{
     top: Number;
@@ -38,11 +41,14 @@ export default function AdminUsersPage() {
     setIsOptionsModalOpen(false);
   };
 
-  const handleDeleteUser = () => {
-    if (selectedUser) {
-      console.log("Placeholder for logic deleting users:", selectedUser);
-    }
+  const handleDeleteUser = (userId: string) => {
+    setUsers(users.filter((user) => user._id !== userId));
+  };
+
+  const initiateUserDeletion = (user: User) => {
+    setSelectedUser(user);
     setIsOptionsModalOpen(false);
+    setIsDeleteConfirmationOpen(true);
   };
 
   const openOptionsModal = (user: User, button: HTMLElement) => {
@@ -199,11 +205,18 @@ export default function AdminUsersPage() {
         isOpen={isOptionsModalOpen}
         onClose={() => setIsOptionsModalOpen(false)}
         onEdit={handleEditUser}
-        onDelete={handleDeleteUser}
+        onDelete={() => initiateUserDeletion(selectedUser!)}
         position={{
           top: Number(modalPosition.top),
           left: Number(modalPosition.left),
         }}
+      />
+
+      <DeleteModal
+        isOpen={isDeleteConfirmationOpen}
+        onClose={() => setIsDeleteConfirmationOpen(false)}
+        user={selectedUser}
+        onUserDeleted={handleDeleteUser}
       />
     </div>
   );
