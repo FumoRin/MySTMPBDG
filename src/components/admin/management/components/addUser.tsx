@@ -18,6 +18,15 @@ interface UserForm {
   name: string;
   email: string;
   role: userRole;
+  student_info?: {
+    department?: string;
+    generation?: number;
+    class?: string;
+  };
+  teacher_info?: {
+    department?: string;
+    subjects?: string[];
+  };
 }
 
 interface ApiResponse {
@@ -28,9 +37,6 @@ interface ApiResponse {
     role: string;
     profile: {
       full_name: string;
-      phone: string;
-      address: string;
-      photo_url: string;
     };
   };
 }
@@ -49,6 +55,8 @@ export default function AddUserModal({
     name: "",
     email: "",
     role: "student",
+    student_info: { department: "", generation: 0, class: "" },
+    teacher_info: { department: "", subjects: [""] },
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,15 +73,7 @@ export default function AddUserModal({
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify({
-          username: user.username,
-          password: user.password,
-          email: user.email,
-          role: user.role,
-          profile: {
-            full_name: user.username,
-          },
-        }),
+        body: JSON.stringify(user),
       });
 
       if (!response.ok) {
@@ -92,6 +92,8 @@ export default function AddUserModal({
         name: data.user.profile.full_name,
         email: data.user.email,
         role: data.user.role as userRole,
+        student_info: user.role === "student" ? user.student_info : undefined,
+        teacher_info: user.role === "teacher" ? user.teacher_info : undefined,
       });
       onClose();
       setUser({
@@ -100,6 +102,8 @@ export default function AddUserModal({
         name: "",
         email: "",
         role: "student",
+        student_info: { department: "", generation: 0, class: "" },
+        teacher_info: { department: "", subjects: [""] },
       });
     } catch (error) {
       toast.dismiss(loadingToast);
@@ -111,154 +115,293 @@ export default function AddUserModal({
   };
 
   return (
-    <Transition appear show={isOpen} as={Fragment}>
-      <div className="fixed inset-0 z-50 overflow-y-auto">
-        {/* Backdrop */}
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
+    <Transition show={isOpen} as={Fragment}>
+      <Transition.Child
+        as={Fragment}
+        enter="ease-out duration-300"
+        enterFrom="opacity-0"
+        enterTo="opacity-100"
+        leave="ease-in duration-200"
+        leaveFrom="opacity-100"
+        leaveTo="opacity-0"
+      >
+        <div
+          className="fixed inset-0 bg-black/50 z-40"
+          aria-hidden="true"
+          onClick={onClose}
         >
-          <div
-            className="fixed inset-0 bg-black/50"
-            aria-hidden="true"
-            onClick={onClose}
-          />
-        </Transition.Child>
-
-        {/* Modal */}
-        <div className="fixed inset-0 flex items-center justify-center p-4">
-          <Transition.Child
-            as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0 scale-95"
-            enterTo="opacity-100 scale-100"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100 scale-100"
-            leaveTo="opacity-0 scale-95"
-          >
-            <div
-              className="bg-white rounded-lg p-6 w-full max-w-md relative transform transition-all"
-              onClick={(e) => e.stopPropagation()}
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0 scale-95"
+              enterTo="opacity-100 scale-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100 scale-100"
+              leaveTo="opacity-0 scale-95"
             >
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">Create New Users</h2>
-                <button
-                  onClick={onClose}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <UserPlus size={20} />
-                </button>
-              </div>
+              <div
+                className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold">Create New Users</h2>
+                  <button
+                    onClick={onClose}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <UserPlus size={20} />
+                  </button>
+                </div>
+                <form onSubmit={handleSubmit}>
+                  {error && (
+                    <div className="mb-4 p-2 bg-red-100 text-red-700 rounded">
+                      {error}
+                    </div>
+                  )}
+                  <div className="space-y-4">
+                    {/* Username Field */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Username
+                      </label>
+                      <input
+                        type="text"
+                        value={user.username}
+                        onChange={(e) =>
+                          setUser({ ...user, username: e.target.value })
+                        }
+                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                        required
+                      />
+                    </div>
 
-              <form onSubmit={handleSubmit}>
-                {error && (
-                  <div className="mb-4 p-2 bg-red-100 text-red-700 rounded">
-                    {error}
-                  </div>
-                )}
-                <div className="space-y-4">
-                  {/* Username Field */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Username
-                    </label>
-                    <input
-                      type="text"
-                      value={user.username}
-                      onChange={(e) =>
-                        setUser({ ...user, username: e.target.value })
-                      }
-                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-                      required
-                    />
+                    {/* password Field */}
+                    <div className="relative">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Password
+                      </label>
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={user.password}
+                        onChange={(e) =>
+                          setUser({ ...user, password: e.target.value })
+                        }
+                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 pr-10"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-2 top-[70%] transform -translate-y-1/2"
+                      >
+                        {showPassword ? (
+                          <EyeOff size={20} />
+                        ) : (
+                          <Eye size={20} />
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Email Field */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Email
+                      </label>
+                      <input
+                        type="text"
+                        value={user.email}
+                        onChange={(e) =>
+                          setUser({ ...user, email: e.target.value })
+                        }
+                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                        required
+                      />
+                    </div>
+
+                    {/* Role Field */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Role
+                      </label>
+                      <select
+                        value={user.role}
+                        onChange={(e) => {
+                          const selectedRole = e.target.value as userRole;
+                          setUser({
+                            ...user,
+                            role: selectedRole,
+                            student_info:
+                              selectedRole === "student"
+                                ? {
+                                    department: "",
+                                    generation: 0,
+                                    class: "",
+                                  }
+                                : undefined,
+                            teacher_info:
+                              selectedRole === "teacher"
+                                ? {
+                                    department: "",
+                                    subjects: [""],
+                                  }
+                                : undefined,
+                          });
+                        }}
+                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                      >
+                        <option value="student">Student</option>
+                        <option value="teacher">Teacher</option>
+                        <option value="sysadmin">Sysadmin</option>
+                      </select>
+                    </div>
                   </div>
 
-                  {/* Password Field */}
-                  <div className="relative">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Password
-                    </label>
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      value={user.password}
-                      onChange={(e) =>
-                        setUser({ ...user, password: e.target.value })
-                      }
-                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 pr-10"
-                      required
-                    />
+                  {/* Students Info */}
+                  {user.role === "student" && (
+                    <div className="mb-4 pt-4">
+                      <h3 className="text-md font-semibold text-gray-700">
+                        Student Information
+                      </h3>
+                      <div className="mb-2 pt-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Department
+                        </label>
+                        <input
+                          type="text"
+                          value={user.student_info?.department}
+                          onChange={(e) =>
+                            setUser({
+                              ...user,
+                              student_info: {
+                                ...user.student_info,
+                                department: e.target.value,
+                              },
+                            })
+                          }
+                          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                          required
+                        />
+                      </div>
+                      <div className="mb-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Year of Enrollment
+                        </label>
+                        <input
+                          type="number"
+                          value={user.student_info?.generation}
+                          onChange={(e) =>
+                            setUser({
+                              ...user,
+                              student_info: {
+                                ...user.student_info,
+                                generation: parseInt(e.target.value),
+                              },
+                            })
+                          }
+                          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                          required
+                        />
+                      </div>
+                      <div className="mb-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Class
+                        </label>
+                        <input
+                          type="text"
+                          value={user.student_info?.class}
+                          onChange={(e) =>
+                            setUser({
+                              ...user,
+                              student_info: {
+                                ...user.student_info,
+                                class: e.target.value,
+                              },
+                            })
+                          }
+                          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                          required
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Teacher Info */}
+                  {user.role === "teacher" && (
+                    <div className="mb-4 pt-4">
+                      <h3 className="text-md font-semibold text-gray-700">
+                        Teacher Information
+                      </h3>
+                      <div className="mb-2 pt-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Department
+                        </label>
+                        <input
+                          type="text"
+                          value={user.teacher_info?.department}
+                          onChange={(e) =>
+                            setUser({
+                              ...user,
+                              teacher_info: {
+                                ...user.teacher_info,
+                                department: e.target.value,
+                              },
+                            })
+                          }
+                          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                          required
+                        />
+                      </div>
+                      <div className="mb-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Subjects
+                        </label>
+                        <input
+                          type="text"
+                          value={user.teacher_info?.subjects?.join(", ") || ""}
+                          onChange={(e) =>
+                            setUser({
+                              ...user,
+                              teacher_info: {
+                                ...user.teacher_info,
+                                subjects: e.target.value
+                                  .split(",")
+                                  .map((subject) => subject.trim()),
+                              },
+                            })
+                          }
+                          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                          placeholder="Comma separated subjects"
+                          required
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Form Buttons */}
+                  <div className="mt-6 flex justify-end gap-3">
                     <button
                       type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-2 top-[70%] transform -translate-y-1/2"
+                      onClick={onClose}
+                      className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
+                      disabled={loading}
                     >
-                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 text-sm text-white bg-blue-500 rounded-md hover:bg-blue-600 disabled:bg-blue-300"
+                      disabled={loading}
+                    >
+                      {loading ? "Creating..." : "Create"}
                     </button>
                   </div>
-
-                  {/* Email Field */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      value={user.email}
-                      onChange={(e) =>
-                        setUser({ ...user, email: e.target.value })
-                      }
-                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-                      required
-                    />
-                  </div>
-
-                  {/* Role Field */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Role
-                    </label>
-                    <select
-                      value={user.role}
-                      onChange={(e) =>
-                        setUser({ ...user, role: e.target.value as userRole })
-                      }
-                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-                    >
-                      <option value="student">Student</option>
-                      <option value="teacher">Teacher</option>
-                      <option value="sysadmin">Sysadmin</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Form Buttons */}
-                <div className="mt-6 flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
-                    disabled={loading}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 text-sm text-white bg-blue-500 rounded-md hover:bg-blue-600 disabled:bg-blue-300"
-                    disabled={loading}
-                  >
-                    {loading ? "Creating..." : "Create"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </Transition.Child>
+                </form>
+              </div>
+            </Transition.Child>
+          </div>
         </div>
-      </div>
+      </Transition.Child>
     </Transition>
   );
 }
