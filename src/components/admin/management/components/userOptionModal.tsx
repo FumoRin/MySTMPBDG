@@ -28,7 +28,7 @@ const UserOptionsModal: React.FC<UserOptionsModalProps> = ({
       leaveTo="opacity-0"
     >
       <div
-        className={`absolute z-10 bg-white rounded-lg shadow-lg p-4`}
+        className={`absolute z-10 bg-white rounded-lg shadow-lg p-2`}
         style={{ top: position.top, left: position.left }} // Use position prop for placement
       >
         {/* <h2 className="text-lg font-bold mb-4">User Options</h2> */}

@@ -4,13 +4,14 @@ import toast from "react-hot-toast";
 import UserOptionsModal from "./components/userOptionModal";
 import AddUserModal from "./components/addUser";
 import DeleteModal from "./components/userDeleteModal";
+import UserModifyModal from "./components/userModifyModal";
 
 interface User {
   _id: string;
   username: string;
   name: string;
   email: string;
-  role: string;
+  role: "sysadmin" | "teacher" | "student";
   status: string;
 }
 
@@ -19,6 +20,7 @@ export default function AdminUsersPage() {
   const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
   const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] =
     useState(false);
+  const [isModifyModalOpen, setIsModifyModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [modalPosition, setModalPosition] = useState<{
     top: Number;
@@ -34,11 +36,18 @@ export default function AdminUsersPage() {
     setIsAddModalOpen(false);
   };
 
-  const handleEditUser = () => {
-    if (selectedUser) {
-      console.log("Placeholder for logic editing users:", selectedUser);
-    }
+  const handleOpenModifyUser = (user: User) => {
+    setSelectedUser(user);
+    setIsModifyModalOpen(true);
     setIsOptionsModalOpen(false);
+  };
+
+  const handleUserUpdated = (updatedUser: User) => {
+    setUsers((prevUsers) =>
+      prevUsers.map((user) =>
+        user._id === updatedUser._id ? updatedUser : user
+      )
+    );
   };
 
   const handleDeleteUser = (userId: string) => {
@@ -204,7 +213,7 @@ export default function AdminUsersPage() {
       <UserOptionsModal
         isOpen={isOptionsModalOpen}
         onClose={() => setIsOptionsModalOpen(false)}
-        onEdit={handleEditUser}
+        onEdit={() => handleOpenModifyUser(selectedUser!)}
         onDelete={() => initiateUserDeletion(selectedUser!)}
         position={{
           top: Number(modalPosition.top),
@@ -217,6 +226,13 @@ export default function AdminUsersPage() {
         onClose={() => setIsDeleteConfirmationOpen(false)}
         user={selectedUser}
         onUserDeleted={handleDeleteUser}
+      />
+
+      <UserModifyModal
+        isOpen={isModifyModalOpen}
+        onClose={() => setIsModifyModalOpen(false)}
+        user={selectedUser!}
+        onUserUpdated={(updatedUser) => handleUserUpdated(updatedUser as User)}
       />
     </div>
   );
