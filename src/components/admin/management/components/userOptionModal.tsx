@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { UserRoundPenIcon, Trash2Icon, XIcon } from "lucide-react";
 import { Transition } from "@headlessui/react";
 
@@ -7,7 +7,7 @@ interface UserOptionsModalProps {
   onClose: () => void;
   onEdit: () => void;
   onDelete: () => void;
-  position: { top: number; left: number }; // New prop for position
+  position: { top: number; left: number };
 }
 
 const UserOptionsModal: React.FC<UserOptionsModalProps> = ({
@@ -17,6 +17,30 @@ const UserOptionsModal: React.FC<UserOptionsModalProps> = ({
   onDelete,
   position,
 }) => {
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Check if the click is outside the modal
+      const modalElement = document.querySelector(".user-options-modal");
+      if (
+        isOpen &&
+        modalElement &&
+        !modalElement.contains(event.target as Node)
+      ) {
+        onClose();
+      }
+    };
+
+    // Add event listener when modal is open
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    // Cleanup the event listener
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen, onClose]);
+
   return (
     <Transition
       show={isOpen}
@@ -28,10 +52,9 @@ const UserOptionsModal: React.FC<UserOptionsModalProps> = ({
       leaveTo="opacity-0"
     >
       <div
-        className={`absolute z-10 bg-white rounded-lg shadow-lg p-2`}
-        style={{ top: position.top, left: position.left }} // Use position prop for placement
+        className={`absolute z-10 bg-white rounded-lg shadow-lg p-2 user-options-modal`}
+        style={{ top: position.top, left: position.left }}
       >
-        {/* <h2 className="text-lg font-bold mb-4">User Options</h2> */}
         <div className="flex flex-col">
           <button onClick={onEdit} className="mb-2 px-4 py-2 text-left">
             <UserRoundPenIcon className="w-4 h-4 mr-2 inline-block" />

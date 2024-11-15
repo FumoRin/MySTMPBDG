@@ -1,72 +1,54 @@
-import { Search, Filter, UserPlus, MoreVertical } from "lucide-react";
+import {
+  Search,
+  Filter,
+  UserPlus,
+  MoreVertical,
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import UserOptionsModal from "./components/userOptionModal";
 import AddUserModal from "./components/addUser";
 import DeleteModal from "./components/userDeleteModal";
 import UserModifyModal from "./components/userModifyModal";
+import UserFilterModal from "./components/userFilterModal";
+import { User } from "../../../context/userTypes";
 
-interface User {
-  _id: string;
-  username: string;
-  name: string;
-  email: string;
-  role: "sysadmin" | "teacher" | "student";
-  status: string;
+type SortableFields = "username" | "email" | "full_name";
+type SortDirection = "asc" | "desc";
+
+interface ModalPosition {
+  top: number;
+  left: number;
 }
 
 export default function AdminUsersPage() {
+  // State Management
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isOptionsModalOpen, setIsOptionsModalOpen] = useState(false);
   const [isDeleteConfirmationOpen, setIsDeleteConfirmationOpen] =
     useState(false);
   const [isModifyModalOpen, setIsModifyModalOpen] = useState(false);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [modalPosition, setModalPosition] = useState<{
-    top: Number;
-    left: Number;
-  }>({ top: 0, left: 0 });
+  const [modalPosition, setModalPosition] = useState<ModalPosition>({
+    top: 0,
+    left: 0,
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [users, setUsers] = useState<User[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortField, setSortField] = useState<SortableFields>("username");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [filters, setFilters] = useState({
+    role: "",
+    department: "",
+    generation: "",
+  });
 
-  const handleCreateUser = (userData: any) => {
-    // Add logic to save user
-    console.log(userData);
-    setIsAddModalOpen(false);
-  };
-
-  const handleOpenModifyUser = (user: User) => {
-    setSelectedUser(user);
-    setIsModifyModalOpen(true);
-    setIsOptionsModalOpen(false);
-  };
-
-  const handleUserUpdated = (updatedUser: User) => {
-    setUsers((prevUsers) =>
-      prevUsers.map((user) =>
-        user._id === updatedUser._id ? updatedUser : user
-      )
-    );
-  };
-
-  const handleDeleteUser = (userId: string) => {
-    setUsers(users.filter((user) => user._id !== userId));
-  };
-
-  const initiateUserDeletion = (user: User) => {
-    setSelectedUser(user);
-    setIsOptionsModalOpen(false);
-    setIsDeleteConfirmationOpen(true);
-  };
-
-  const openOptionsModal = (user: User, button: HTMLElement) => {
-    setSelectedUser(user);
-    const { top, left, height } = button.getBoundingClientRect();
-    setModalPosition({ top: top + height + window.scrollY, left: left });
-    setIsOptionsModalOpen(true);
-  };
-
+  // Data Fetching
   useEffect(() => {
     const fetchUsers = async () => {
       const token = localStorage.getItem("token");
@@ -78,7 +60,6 @@ export default function AdminUsersPage() {
       }
 
       try {
-        // Fetch users with authorization header
         const response = await fetch("http://localhost:3000/api/users", {
           method: "GET",
           headers: {
@@ -87,9 +68,7 @@ export default function AdminUsersPage() {
           },
         });
 
-        // Check if the response is successful
         if (!response.ok) {
-          // Handle different types of errors based on status
           if (response.status === 401) {
             throw new Error("Unauthorized: Please log in again");
           } else if (response.status === 403) {
@@ -100,52 +79,152 @@ export default function AdminUsersPage() {
         }
 
         const data = await response.json();
-
         setUsers(data);
-        setIsLoading(false);
       } catch (error) {
         console.error("Error fetching users:", error);
-
-        // Handle different types of errors
         setError(
           error instanceof Error ? error.message : "An unknown error occurred"
         );
-        setIsLoading(false);
-
-        // Show error toast
         toast.error(
           error instanceof Error ? error.message : "Failed to fetch users"
         );
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchUsers();
   }, []);
 
+  // User Management Functions
+  const handleCreateUser = (userData: User) => {
+    setUsers((prevUsers) => [...prevUsers, userData]);
+    setIsAddModalOpen(false);
+  };
+
+  const handleModifyUser = (updatedUser: User) => {
+    setUsers((prevUsers) =>
+      prevUsers.map((user) =>
+        user._id === updatedUser._id ? updatedUser : user
+      )
+    );
+    setIsModifyModalOpen(false);
+  };
+
+  const handleDeleteUser = (userId: string) => {
+    setUsers((prevUsers) => prevUsers.filter((user) => user._id !== userId));
+    setIsDeleteConfirmationOpen(false);
+  };
+
+  // Modal Management Functions
+  const handleOpenModifyUser = (user: User) => {
+    setSelectedUser(user);
+    setIsModifyModalOpen(true);
+    setIsOptionsModalOpen(false);
+  };
+
+  const initiateUserDeletion = (user: User) => {
+    setSelectedUser(user);
+    setIsOptionsModalOpen(false);
+    setIsDeleteConfirmationOpen(true);
+  };
+
+  const openOptionsModal = (user: User, button: HTMLElement) => {
+    setSelectedUser(user);
+    const { top, left, height } = button.getBoundingClientRect();
+    const modalWidth = 150;
+    setModalPosition({
+      top: top + height + window.scrollY,
+      left: left - modalWidth,
+    });
+    setIsOptionsModalOpen(true);
+  };
+
+  // Sorting and Filtering Functions
+  const handleSort = (field: SortableFields) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  const getFilteredAndSortedUsers = () => {
+    let filtered = users.filter((user) => {
+      // Search term filter
+      const matchesSearch =
+        (user.profile &&
+          user.profile.full_name
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())) ||
+        user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase());
+
+      // Role filter
+      const matchesRole = !filters.role || user.role === filters.role;
+
+      // Department filter
+      const matchesDepartment =
+        !filters.department ||
+        user.teacher_info?.department === filters.department ||
+        user.student_info?.department === filters.department;
+
+      // Generation filter
+      const matchesGeneration =
+        !filters.generation ||
+        String(user.student_info?.generation) === filters.generation;
+
+      return (
+        matchesSearch && matchesRole && matchesDepartment && matchesGeneration
+      );
+    });
+
+    return filtered.sort((a, b) => {
+      let aValue: string;
+      let bValue: string;
+
+      if (sortField === "full_name") {
+        aValue = a.profile?.full_name || "";
+        bValue = b.profile?.full_name || "";
+      } else {
+        aValue = a[sortField];
+        bValue = b[sortField];
+      }
+
+      return sortDirection === "asc"
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue);
+    });
+  };
+
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-screen">
+        Loading...
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="text-red-500">Error: {error}</div>;
+    return <div className="text-red-500 text-center p-4">Error: {error}</div>;
   }
+
+  const filteredAndSortedUsers = getFilteredAndSortedUsers();
 
   return (
     <div className="p-6">
+      {/* Header Section */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">User Management</h1>
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg transition duration-300 ease-in-out transform hover:bg-blue-600 hover:scale-105"
+          className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg 
+                   transition duration-300 ease-in-out hover:bg-blue-600 hover:scale-105"
         >
           <UserPlus size={20} />
           Add New User
         </button>
-        <AddUserModal
-          isOpen={isAddModalOpen}
-          onClose={() => setIsAddModalOpen(false)}
-          onSubmit={handleCreateUser}
-        />
       </div>
 
       {/* Search and Filter Bar */}
@@ -159,80 +238,176 @@ export default function AdminUsersPage() {
             type="text"
             placeholder="Search users..."
             className="w-full pl-10 pr-4 py-2 border rounded-lg"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 border rounded-lg">
+        <button
+          onClick={() => setIsFilterModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 border rounded-lg"
+        >
           <Filter size={20} />
           Filters
+          {/* Optional: Show number of active filters */}
+          {filters.role || filters.department || filters.generation ? (
+            <span className="text-xs text-red-500">Active</span>
+          ) : null}
         </button>
       </div>
 
       {/* Users Table */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Username
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Name
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Email
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Role
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {users.map((user) => (
-              <tr key={user._id}>
-                <td className="px-6 py-4 whitespace-nowrap">{user.username}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{user.name}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{user.role}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <button
-                    onClick={(e) => openOptionsModal(user, e.currentTarget)}
-                    className="text-gray-400 hover:text-gray-600 transition-colors duration-300 ease-in-out"
-                  >
-                    <MoreVertical size={20} />
-                  </button>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  onClick={() => handleSort("full_name")}
+                >
+                  <div className="flex items-center space-x-1">
+                    <span>Full Name</span>
+                    {sortField === "full_name" &&
+                      (sortDirection === "asc" ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      ))}
+                  </div>
+                </th>
+                <th
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  onClick={() => handleSort("username")}
+                >
+                  <div className="flex items-center space-x-1">
+                    <span>Username</span>
+                    {sortField === "username" &&
+                      (sortDirection === "asc" ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      ))}
+                  </div>
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Role
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Department
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Contact
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredAndSortedUsers.map((user, index) => (
+                <tr
+                  key={user._id}
+                  className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                >
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">
+                      {user.profile?.full_name || "N/A"}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      {user.username || "N/A"}
+                    </div>
+                    <div className="text-sm text-gray-500">{user.email}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                        ${
+                          user.role === "teacher"
+                            ? "bg-green-100 text-green-800"
+                            : user.role === "student"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-purple-100 text-purple-800"
+                        }`}
+                    >
+                      {user.role}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {user.teacher_info?.department ||
+                      user.student_info?.department}
+                    {user.student_info && (
+                      <div className="text-xs text-gray-400">
+                        Class: {user.student_info.class}{" "}
+                        {user.student_info.generation}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div>{user.profile?.phone || "N/A"}</div>
+                    <div className="text-xs">
+                      {user.profile?.address || "N/A"}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <button
+                      onClick={(e) => openOptionsModal(user, e.currentTarget)}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <MoreVertical size={20} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
-      {/* User Options Modal */}
+
+      {/* Modals */}
+      <AddUserModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSubmit={(userForm) => handleCreateUser({ ...userForm, _id: "" })}
+      />
+
       <UserOptionsModal
         isOpen={isOptionsModalOpen}
         onClose={() => setIsOptionsModalOpen(false)}
-        onEdit={() => handleOpenModifyUser(selectedUser!)}
-        onDelete={() => initiateUserDeletion(selectedUser!)}
-        position={{
-          top: Number(modalPosition.top),
-          left: Number(modalPosition.left),
-        }}
+        onEdit={() => selectedUser && handleOpenModifyUser(selectedUser)}
+        onDelete={() => selectedUser && initiateUserDeletion(selectedUser)}
+        position={modalPosition}
       />
 
       <DeleteModal
         isOpen={isDeleteConfirmationOpen}
         onClose={() => setIsDeleteConfirmationOpen(false)}
-        user={selectedUser}
+        user={
+          selectedUser
+            ? {
+                ...selectedUser,
+              }
+            : null
+        }
         onUserDeleted={handleDeleteUser}
       />
 
-      <UserModifyModal
-        isOpen={isModifyModalOpen}
-        onClose={() => setIsModifyModalOpen(false)}
-        user={selectedUser!}
-        onUserUpdated={(updatedUser) => handleUserUpdated(updatedUser as User)}
+      {selectedUser && (
+        <UserModifyModal
+          isOpen={isModifyModalOpen}
+          onClose={() => setIsModifyModalOpen(false)}
+          user={selectedUser}
+          onUserUpdated={handleModifyUser}
+        />
+      )}
+
+      <UserFilterModal
+        isOpen={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        users={users}
+        currentFilters={filters}
+        onApplyFilters={(newFilters) => setFilters(newFilters)}
       />
     </div>
   );

@@ -2,24 +2,7 @@ import React, { useState, useEffect, Fragment } from "react";
 import { Transition } from "@headlessui/react";
 import { Eye, EyeOff, UserPlus } from "lucide-react";
 import toast from "react-hot-toast";
-
-interface User {
-  _id: string;
-  username: string;
-  name: string;
-  email: string;
-  role: "sysadmin" | "teacher" | "student";
-  student_info?: {
-    department: string;
-    generation: number;
-    class: string;
-  };
-  teacher_info?: {
-    department: string;
-    subjects: string[];
-  };
-  password?: string;
-}
+import { User } from "../../../../context/userTypes";
 
 interface UserModifyModalProps {
   isOpen: boolean;
