@@ -173,7 +173,7 @@ export default function AdminUsersPage() {
       // Generation filter
       const matchesGeneration =
         !filters.generation ||
-        String(user.student_info?.generation) === filters.generation;
+        Number(user.student_info?.generation) === Number(filters.generation);
 
       return (
         matchesSearch && matchesRole && matchesDepartment && matchesGeneration
