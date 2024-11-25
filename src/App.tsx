@@ -8,6 +8,7 @@ import AdminPage from "./components/admin/adminPage";
 import AdminUsersPage from "./components/admin/management/userPage";
 import AdminAnnouncementsPage from "./components/admin/management/announcemenPage";
 import AdminSchedulePage from "./components/admin/management/schedulePage";
+import AnnouncementPage from "./components/announcement/announcementPage";
 import { AuthProvider } from "./context/authContext";
 
 import { Toaster } from "react-hot-toast";
@@ -27,6 +28,7 @@ import {
   Bell,
   Layout,
   MonitorCog,
+  BellIcon,
 } from "lucide-react";
 
 function SchedulePageWrapper({ expanded }: { expanded: boolean }) {
@@ -94,6 +96,7 @@ function App() {
 
 function AppContent() {
   const [expanded, setExpanded] = useState(true); // State to manage sidebar expansion
+  const [explicitToggle, setExplicitToggle] = useState(false);
   const location = useLocation();
   const isLoginPage = location.pathname === "/login";
   const isAdminPage = location.pathname.startsWith("/admin");
@@ -148,14 +151,22 @@ function AppContent() {
         to: "/chat",
         alert: true,
       },
+      {
+        icon: <BellIcon />,
+        text: "Announcement",
+        to: "/schedule",
+      },
     ];
   };
 
   useEffect(() => {
     if (isLoginPage) {
       setExpanded(false); // Collapse sidebar on login page
+      setExplicitToggle(false);
     } else {
-      setExpanded(true); // Expand sidebar on other pages
+      if (!explicitToggle) {
+        setExpanded(true); // Expand sidebar on other pages
+      }
     }
   }, [location.pathname, isLoginPage]);
 
@@ -164,7 +175,13 @@ function AppContent() {
       {/* Conditionally render Sidebar and HomeHeader based on the current path */}
       {!isLoginPage && (
         <>
-          <Sidebar expanded={expanded} setExpanded={setExpanded}>
+          <Sidebar
+            expanded={expanded}
+            setExpanded={(value) => {
+              setExpanded(value);
+              setExplicitToggle(true); // Mark as explicitly toggled
+            }}
+          >
             <hr className="my-2" />
             {getNavigationItems().map((item, index) => (
               <SidebarItem
@@ -198,6 +215,7 @@ function AppContent() {
               element={<SchedulePageWrapper expanded={expanded} />}
             />
             <Route path="/chat" element={<ChatApp />} />
+            <Route path="/schedule" element={<AnnouncementPage />} />
             <Route path="/login" element={<AuthPage />} />
 
             {/* Admin routes */}

@@ -4,7 +4,7 @@ import FormAction from "./formAction";
 import FormExtra from "./formExtra";
 import Input from "./input";
 import { loginFields } from "../formFields";
-import { useAuth } from "../../../context/authContext";
+import { useAuth, User } from "../../../context/authContext";
 
 const Login = () => {
   const [username, setUsername] = useState("");
@@ -33,12 +33,25 @@ const Login = () => {
       }
 
       const data = await response.json();
-      login(data.token, data.user);
+
+      // Transform the user data to match the User interface
+      const userData: User = {
+        id: data.user._id || data.user.id,
+        name: data.user.username,
+        email: data.user.email,
+        role: data.user.role,
+      };
+
+      // Pass transformed user data and token
+      login(userData, data.token);
+
+      console.log("Token:", data.token);
+      console.log("Processed User:", userData);
 
       if (data.user.role === "sysadmin") {
         navigate("/admin");
       } else {
-        navigate("/dashboard");
+        navigate("/home");
       }
     } catch (err) {
       setError("Invalid username or password");
