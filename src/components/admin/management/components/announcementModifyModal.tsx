@@ -1,56 +1,33 @@
-import { Fragment } from "react";
+import React, { useState, useEffect, Fragment } from "react";
+import { Dialog, Transition } from "@headlessui/react";
 import { X } from "lucide-react";
-import { useState } from "react";
-import { Transition } from "@headlessui/react";
 import toast, { Toaster } from "react-hot-toast";
+import { Announcement } from "../../../../context/announcementTypes";
 
-// Updated interface to match more common database structure
-interface AnnouncementForm {
-  title: string;
-  content: string;
-  author_id: string; // This should be the ObjectId of the current user
-  target_audience: ("all" | "teachers" | "students" | "department")[];
-  priority: "low" | "medium" | "high" | "urgent";
-  category: "academic" | "meeting" | "event" | "competition" | "general";
-  location?: string;
-  announcement_date: string | Date;
-  publish_date?: Date;
-  attachments?: {
-    name: string;
-    url: string;
-    type?: string;
-  }[];
-  status?: "scheduled" | "draft" | "published";
-  announcement_time?: string;
-}
-
-interface AnnouncementModalProps {
+interface ModifyAnnouncementModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onRefresh?: () => void;
+  announcement: Announcement;
+  onAnnouncementUpdated: (updatedAnnouncement: Announcement) => void;
 }
 
-export default function AnnouncementModal({
+export default function ModifyAnnouncementModal({
   isOpen,
   onClose,
-  onRefresh,
-}: AnnouncementModalProps) {
-  // Updated initial state to match new interface
-  const [formData, setFormData] = useState<AnnouncementForm>({
-    title: "",
-    content: "",
-    target_audience: ["all"],
-    priority: "low",
-    category: "general",
-    announcement_date: new Date().toISOString().split("T")[0],
-    announcement_time: "00:00",
-    location: "",
-    status: "scheduled",
-    author_id: localStorage.getItem("_id") || "", // Add required author_id field
-  });
-
+  announcement,
+  onAnnouncementUpdated,
+}: ModifyAnnouncementModalProps) {
+  const [modifiedAnnouncement, setModifiedAnnouncement] =
+    useState<Announcement>({ ...announcement });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setModifiedAnnouncement({ ...announcement });
+      setError(null);
+    }
+  }, [isOpen, announcement]);
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -59,89 +36,32 @@ export default function AnnouncementModal({
   ) => {
     const { name, value } = e.target;
 
-    setFormData((prevData) => {
-      if (name === "target_audience") {
-        return {
-          ...prevData,
-          [name]: [value as "all" | "teachers" | "students" | "department"],
-        };
-      }
-      return {
-        ...prevData,
-        [name]: value,
-      };
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Create a new date object from the date and time inputs
-      const dateStr = formData.announcement_date.toString();
-      const timeStr = formData.announcement_time || "00:00";
-      const [year, month, day] = dateStr.split("-").map(Number);
-      const [hours, minutes] = timeStr.split(":").map(Number);
-
-      const combinedDateTime = new Date(year, month - 1, day, hours, minutes);
-
-      // Create submission data with the combined ISO datetime and publish_date
-      const submissionData = {
-        ...formData,
-        announcement_date: combinedDateTime.toISOString(),
-        publish_date: new Date().toISOString(),
-        announcement_time: undefined, // Remove the separate time field
-      };
-
-      const response = await fetch("http://localhost:3000/api/announcements", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify(submissionData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to create announcement");
-      }
-
-      toast.success("Announcement Created Successfully!");
-      // Reset form data
-      setFormData({
-        title: "",
-        content: "",
-        announcement_date: "",
-        announcement_time: "00:00",
-        location: "",
-        status: "scheduled",
-        target_audience: ["all"],
-        priority: "low",
-        category: "general",
-        author_id: formData.author_id, // Keep the existing author_id
-      });
-
-      onRefresh?.();
-      onClose();
-    } catch (err) {
-      toast.error(
-        err instanceof Error
-          ? err.message
-          : "An error occurred while creating the announcement"
+    if (name === "target_audience") {
+      const select = e.target as HTMLSelectElement;
+      const selectedOptions = Array.from(select.selectedOptions).map(
+        (option) => option.value
       );
-    } finally {
-      setIsLoading(false);
+      setModifiedAnnouncement((prev) => ({
+        ...prev,
+        target_audience: selectedOptions as (
+          | "all"
+          | "teachers"
+          | "students"
+          | "department"
+        )[],
+      }));
+    } else {
+      setModifiedAnnouncement((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
     }
   };
 
-  // Add this handler for checkboxes
   const handleTargetAudienceChange = (
     value: "all" | "teachers" | "students" | "department"
   ) => {
-    setFormData((prev) => ({
+    setModifiedAnnouncement((prev) => ({
       ...prev,
       target_audience: prev.target_audience.includes(value)
         ? prev.target_audience.filter((item) => item !== value)
@@ -149,23 +69,84 @@ export default function AnnouncementModal({
     }));
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+    const loadingToast = toast.loading("Updating announcement...");
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      // Create a new date object from the date and time inputs
+      const dateStr = modifiedAnnouncement.announcement_date.toString();
+      const timeStr = new Date(modifiedAnnouncement.announcement_date)
+        .toTimeString()
+        .slice(0, 5);
+      const [year, month, day] = dateStr.split("T")[0].split("-").map(Number);
+      const [hours, minutes] = timeStr.split(":").map(Number);
+
+      const combinedDateTime = new Date(year, month - 1, day, hours, minutes);
+
+      // Create submission data with the combined ISO datetime
+      const submissionData = {
+        ...modifiedAnnouncement,
+        announcement_date: combinedDateTime.toISOString(),
+      };
+
+      const response = await fetch(
+        `http://localhost:3000/api/announcements/${announcement._id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(submissionData),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update announcement");
+      }
+
+      const updatedAnnouncement: Announcement = await response.json();
+      toast.dismiss(loadingToast);
+      toast.success("Announcement updated successfully");
+      onAnnouncementUpdated(updatedAnnouncement);
+      onClose();
+    } catch (err) {
+      toast.dismiss(loadingToast);
+      const errorMessage =
+        err instanceof Error ? err.message : "An unexpected error occurred";
+      toast.error(errorMessage);
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <Transition show={isOpen} as={Fragment}>
-      <Transition.Child
-        as={Fragment}
-        enter="ease-out duration-300"
-        enterFrom="opacity-0"
-        enterTo="opacity-100"
-        leave="ease-in duration-200"
-        leaveFrom="opacity-100"
-        leaveTo="opacity-0"
-      >
-        <div
-          className="fixed inset-0 bg-black/50 z-40"
-          aria-hidden="true"
-          onClick={onClose}
+    <Transition appear show={isOpen} as={Fragment}>
+      <Dialog as="div" className="relative z-50" onClose={onClose}>
+        <Transition.Child
+          as={Fragment}
+          enter="ease-out duration-300"
+          enterFrom="opacity-0"
+          enterTo="opacity-100"
+          leave="ease-in duration-200"
+          leaveFrom="opacity-100"
+          leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/50" aria-hidden="true" />
+        </Transition.Child>
+
+        <div className="fixed inset-0 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4 text-center">
             <Transition.Child
               as={Fragment}
               enter="ease-out duration-300"
@@ -175,12 +156,11 @@ export default function AnnouncementModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <div
-                className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-                onClick={(e) => e.stopPropagation()}
-              >
+              <Dialog.Panel className="w-full max-w-2xl transform overflow-hidden rounded-lg bg-white p-6 text-left align-middle shadow-xl transition-all">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-bold">Create New Announcement</h2>
+                  <Dialog.Title className="text-xl font-bold">
+                    Modify An Announcement
+                  </Dialog.Title>
                   <button
                     onClick={onClose}
                     className="text-gray-500 hover:text-gray-700"
@@ -203,7 +183,7 @@ export default function AnnouncementModal({
                     <input
                       type="text"
                       name="title"
-                      value={formData.title}
+                      value={modifiedAnnouncement.title}
                       onChange={handleInputChange}
                       className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
                       required
@@ -216,7 +196,7 @@ export default function AnnouncementModal({
                     </label>
                     <textarea
                       name="content"
-                      value={formData.content}
+                      value={modifiedAnnouncement.content}
                       onChange={handleInputChange}
                       className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
                       required
@@ -235,7 +215,10 @@ export default function AnnouncementModal({
                         type="date"
                         id="announcement_date"
                         name="announcement_date"
-                        value={formData.announcement_date?.toString() || ""}
+                        value={
+                          modifiedAnnouncement.announcement_date?.toString() ||
+                          ""
+                        }
                         onChange={handleInputChange}
                         className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
                       />
@@ -251,7 +234,9 @@ export default function AnnouncementModal({
                         type="time"
                         id="announcement_time"
                         name="announcement_time"
-                        value={formData.announcement_time}
+                        value={new Date(modifiedAnnouncement.announcement_date)
+                          .toTimeString()
+                          .slice(0, 5)}
                         onChange={handleInputChange}
                         className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
                         step="60"
@@ -274,12 +259,8 @@ export default function AnnouncementModal({
                           >
                             <input
                               type="checkbox"
-                              checked={formData.target_audience.includes(
-                                option as
-                                  | "all"
-                                  | "teachers"
-                                  | "students"
-                                  | "department"
+                              checked={modifiedAnnouncement.target_audience.includes(
+                                option
                               )}
                               onChange={() =>
                                 handleTargetAudienceChange(
@@ -308,26 +289,10 @@ export default function AnnouncementModal({
                     <input
                       type="text"
                       name="location"
-                      value={formData.location}
+                      value={modifiedAnnouncement.location}
                       onChange={handleInputChange}
                       className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
                     />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Status
-                    </label>
-                    <select
-                      name="status"
-                      value={formData.status}
-                      onChange={handleInputChange}
-                      className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-                    >
-                      <option value="scheduled">Scheduled</option>
-                      <option value="draft">Draft</option>
-                      <option value="published">Published</option>
-                    </select>
                   </div>
 
                   <div>
@@ -336,7 +301,7 @@ export default function AnnouncementModal({
                     </label>
                     <select
                       name="priority"
-                      value={formData.priority}
+                      value={modifiedAnnouncement.priority}
                       onChange={handleInputChange}
                       className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
                     >
@@ -353,7 +318,7 @@ export default function AnnouncementModal({
                     </label>
                     <select
                       name="category"
-                      value={formData.category}
+                      value={modifiedAnnouncement.category}
                       onChange={handleInputChange}
                       className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
                     >
@@ -380,16 +345,16 @@ export default function AnnouncementModal({
                       className="px-4 py-2 text-sm text-white bg-blue-500 rounded-md hover:bg-blue-600 disabled:bg-blue-300"
                       disabled={isLoading}
                     >
-                      {isLoading ? "Creating..." : "Create"}
+                      {isLoading ? "Updating..." : "Update"}
                     </button>
                   </div>
                 </form>
                 <Toaster />
-              </div>
+              </Dialog.Panel>
             </Transition.Child>
           </div>
         </div>
-      </Transition.Child>
+      </Dialog>
     </Transition>
   );
 }

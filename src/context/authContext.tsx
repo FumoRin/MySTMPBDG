@@ -1,13 +1,6 @@
 // src/context/AuthContext.tsx
 import React, { createContext, useState, useContext, ReactNode } from "react";
-
-// Define User interface
-export interface User {
-  id?: string;
-  name?: string;
-  email?: string;
-  role?: string;
-}
+import { User } from "./userTypes";
 
 // Define AuthContext type
 interface AuthContextType {

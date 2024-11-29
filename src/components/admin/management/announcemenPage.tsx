@@ -1,26 +1,105 @@
 import { Plus, Search, Calendar } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import toast, { Toaster } from "react-hot-toast";
 import AnnouncementModal from "./components/addAnnouncement";
+import { Announcement } from "../../../context/announcementTypes";
+import DeleteModal from "./components/announcementDeleteModal";
+import ModifyAnnouncementModal from "./components/announcementModifyModal";
 
 export default function AdminAnnouncementsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [announcement, setAnnouncement] = useState<Announcement[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setIsLoading] = useState(true);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedAnnouncement, setSelectedAnnouncement] =
+    useState<Announcement | null>(null);
+  const [isModifyModalOpen, setIsModifyModalOpen] = useState(false);
 
-  const handleCreateAnnouncement = (announcementData: any) => {
-    // Add logic to save announcement
-    console.log(announcementData);
-    setIsModalOpen(false);
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("No authentication token found");
+        setIsLoading(false);
+        toast.error("Please log in to access this page");
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          "http://localhost:3000/api/announcements",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            throw new Error("Unauthorized: Please log in again");
+          } else if (response.status === 403) {
+            throw new Error("Forbidden: You do not have permission");
+          } else {
+            throw new Error("Failed to fetch users");
+          }
+        }
+
+        const data = await response.json();
+        setAnnouncement(data);
+      } catch (error) {
+        console.error("Error fetching announcements:", error);
+        setError(
+          error instanceof Error ? error.message : "An unknown error occurred"
+        );
+        toast.error(
+          error instanceof Error ? error.message : "An unknown error occurred"
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchAnnouncements();
+  }, []);
+
+  const handleDeleteClick = (announcement: Announcement) => {
+    setSelectedAnnouncement(announcement);
+    setIsDeleteModalOpen(true);
   };
 
-  const announcements = [
-    {
-      id: 1,
-      title: "System Maintenance Notice",
-      content: "Scheduled maintenance this weekend...",
-      date: "2024-03-15",
-      status: "Scheduled",
-    },
-    // Add more mock data
-  ];
+  const handleAnnouncementDeleted = (announcementId: string) => {
+    setAnnouncement((prevAnnouncements) =>
+      prevAnnouncements.filter((a) => a._id !== announcementId)
+    );
+  };
+
+  const handleAnnouncementUpdated = (updatedAnnouncement: Announcement) => {
+    setAnnouncement((prevAnnouncements) =>
+      prevAnnouncements.map((a) =>
+        a._id === updatedAnnouncement._id ? updatedAnnouncement : a
+      )
+    );
+  };
+
+  const handleEditClick = (announcement: Announcement) => {
+    setSelectedAnnouncement(announcement);
+    setIsModifyModalOpen(true);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        Loading...
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className="text-red-500 text-center p-4">Error: {error}</div>;
+  }
 
   return (
     <div className="p-6">
@@ -38,7 +117,6 @@ export default function AdminAnnouncementsPage() {
       <AnnouncementModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onSubmit={handleCreateAnnouncement}
       />
 
       {/* Search Bar */}
@@ -58,32 +136,84 @@ export default function AdminAnnouncementsPage() {
 
       {/* Announcements Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {announcements.map((announcement) => (
-          <div key={announcement.id} className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-sm text-gray-500 flex items-center gap-2">
-                <Calendar size={16} />
-                {announcement.date}
-              </span>
-              <span
-                className={`px-2 py-1 rounded-full text-xs ${
-                  announcement.status === "Scheduled"
-                    ? "bg-blue-100 text-blue-800"
-                    : "bg-green-100 text-green-800"
-                }`}
-              >
-                {announcement.status}
-              </span>
+        {announcement.map((item) => (
+          <div
+            key={item._id}
+            className="bg-white p-6 rounded-lg shadow relative flex flex-col min-h-[250px]"
+          >
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm text-gray-500 flex items-center gap-2">
+                  <Calendar size={16} />
+                  {new Date(item.announcement_date).toLocaleDateString()}
+                </span>
+                <span className="text-xs text-gray-400 ml-6">
+                  {new Date(item.announcement_date).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+                <span
+                  className={`px-2 py-1 rounded-full text-xs ${
+                    item.priority === "high"
+                      ? "bg-red-100 text-red-800"
+                      : item.priority === "medium"
+                      ? "bg-yellow-100 text-yellow-800"
+                      : "bg-green-100 text-green-800"
+                  }`}
+                >
+                  {item.priority}
+                </span>
+              </div>
+              <h3 className="font-semibold mb-2">{item.title}</h3>
+              <p className="text-gray-600 text-sm mb-4">{item.content}</p>
+              <div className="flex flex-wrap gap-2">
+                <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                  {item.category}
+                </span>
+                <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                  {item.location}
+                </span>
+              </div>
             </div>
-            <h3 className="font-semibold mb-2">{announcement.title}</h3>
-            <p className="text-gray-600 text-sm">{announcement.content}</p>
-            <div className="mt-4 flex gap-2">
-              <button className="text-blue-500 text-sm">Edit</button>
-              <button className="text-red-500 text-sm">Delete</button>
+
+            <div className="mt-4 pt-4 border-t flex gap-2">
+              <button
+                className="text-blue-500 text-sm hover:text-blue-700"
+                onClick={() => handleEditClick(item)}
+              >
+                Edit
+              </button>
+              <button
+                className="text-red-500 text-sm hover:text-red-700"
+                onClick={() => handleDeleteClick(item)}
+              >
+                Delete
+              </button>
             </div>
           </div>
         ))}
+        <Toaster />
       </div>
+
+      <DeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        announcement={selectedAnnouncement}
+        onAnnouncementDeleted={handleAnnouncementDeleted}
+      />
+
+      {selectedAnnouncement && (
+        <ModifyAnnouncementModal
+          isOpen={isModifyModalOpen}
+          onClose={() => {
+            setIsModifyModalOpen(false);
+            setSelectedAnnouncement(null);
+          }}
+          announcement={selectedAnnouncement}
+          onAnnouncementUpdated={handleAnnouncementUpdated}
+        />
+      )}
     </div>
   );
 }
