@@ -2,7 +2,7 @@ import React, { useState, useEffect, Fragment } from "react";
 import { Transition } from "@headlessui/react";
 import { Eye, EyeOff, UserPlus } from "lucide-react";
 import toast from "react-hot-toast";
-import { User } from "../../../../context/userTypes";
+import { User } from "../../../../../context/userTypes";
 
 interface UserModifyModalProps {
   isOpen: boolean;

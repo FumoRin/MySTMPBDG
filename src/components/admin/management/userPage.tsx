@@ -8,11 +8,11 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import UserOptionsModal from "./components/userOptionModal";
-import AddUserModal from "./components/addUser";
-import DeleteModal from "./components/userDeleteModal";
-import UserModifyModal from "./components/userModifyModal";
-import UserFilterModal from "./components/userFilterModal";
+import UserOptionsModal from "./components/user/userOptionModal";
+import AddUserModal from "./components/user/addUser";
+import DeleteModal from "./components/user/userDeleteModal";
+import UserModifyModal from "./components/user/userModifyModal";
+import UserFilterModal from "./components/user/userFilterModal";
 import { User } from "../../../context/userTypes";
 
 type SortableFields = "username" | "email" | "full_name";
@@ -200,9 +200,7 @@ export default function AdminUsersPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        Loading...
-      </div>
+      <div className="flex justify-center items-center h-full">Loading...</div>
     );
   }
 
@@ -213,7 +211,7 @@ export default function AdminUsersPage() {
   const filteredAndSortedUsers = getFilteredAndSortedUsers();
 
   return (
-    <div className="p-6">
+    <div className="container mx-auto p-6 bg-gray-50 h-full min-w-full">
       {/* Header Section */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">User Management</h1>

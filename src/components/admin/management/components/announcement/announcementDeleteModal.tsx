@@ -1,7 +1,7 @@
 import React, { useState, Fragment } from "react";
 import { Transition } from "@headlessui/react";
 import toast from "react-hot-toast";
-import { Announcement } from "../../../../context/announcementTypes";
+import { Announcement } from "../../../../../context/announcementTypes";
 
 interface DeleteModalProps {
   isOpen: boolean;

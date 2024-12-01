@@ -1,7 +1,7 @@
 import React, { useState, Fragment } from "react";
 import { Transition } from "@headlessui/react";
 import { X } from "lucide-react";
-import { User } from "../../../../context/userTypes";
+import { User } from "../../../../../context/userTypes";
 
 interface UserFilterModalProps {
   isOpen: boolean;

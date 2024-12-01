@@ -1,10 +1,10 @@
 import { Plus, Search, Calendar } from "lucide-react";
 import { useState, useEffect } from "react";
 import toast, { Toaster } from "react-hot-toast";
-import AnnouncementModal from "./components/addAnnouncement";
+import AnnouncementModal from "./components/announcement/addAnnouncement";
 import { Announcement } from "../../../context/announcementTypes";
-import DeleteModal from "./components/announcementDeleteModal";
-import ModifyAnnouncementModal from "./components/announcementModifyModal";
+import DeleteModal from "./components/announcement/announcementDeleteModal";
+import ModifyAnnouncementModal from "./components/announcement/announcementModifyModal";
 
 export default function AdminAnnouncementsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -102,7 +102,7 @@ export default function AdminAnnouncementsPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="container mx-auto p-6 bg-gray-50 h-full min-w-full">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Announcement Management</h1>
         <button

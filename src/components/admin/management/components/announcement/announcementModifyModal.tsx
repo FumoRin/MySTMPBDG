@@ -2,7 +2,7 @@ import React, { useState, useEffect, Fragment } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { X } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
-import { Announcement } from "../../../../context/announcementTypes";
+import { Announcement } from "../../../../../context/announcementTypes";
 
 interface ModifyAnnouncementModalProps {
   isOpen: boolean;
