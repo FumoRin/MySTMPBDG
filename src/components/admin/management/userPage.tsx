@@ -211,7 +211,7 @@ export default function AdminUsersPage() {
   const filteredAndSortedUsers = getFilteredAndSortedUsers();
 
   return (
-    <div className="container mx-auto p-6 bg-gray-50 h-full min-w-full">
+    <div className="container mx-auto p-6 bg-gray-50 min-h-full min-w-full">
       {/* Header Section */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">User Management</h1>

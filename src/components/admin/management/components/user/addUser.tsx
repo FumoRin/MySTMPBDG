@@ -68,36 +68,28 @@ export default function AddUserModal({
     setError("");
     setLoading(true);
 
-    // Ensure all required fields are populated
-    const userToSubmit = {
+    // Prepare the user data based on role
+    const userData = {
       ...user,
+      name: user.name || user.username,
       profile: {
-        ...user.profile,
-        // If full_name is empty, use username or a default value
-        full_name: user.profile.full_name || user.username || "New User",
+        full_name: user.profile.full_name || user.username, // Ensure this is included
       },
-      // Ensure role-specific info is properly set
-      student_info:
-        user.role === "student"
-          ? user.student_info
-            ? {
-                ...user.student_info,
-                department: user.student_info.department || "",
-                generation: user.student_info.generation || 0,
-                class: user.student_info.class || "",
-              }
-            : undefined
-          : undefined,
       teacher_info:
         user.role === "teacher"
           ? {
-              ...user.teacher_info,
-              department: user.teacher_info?.department || "",
-              subjects: user.teacher_info?.subjects?.length
-                ? user.teacher_info.subjects
-                : [""],
+              department: user.teacher_info?.department,
+              subjects: user.teacher_info?.subjects,
             }
-          : undefined,
+          : {}, // Use an empty object for non-teachers
+      student_info:
+        user.role === "student"
+          ? {
+              department: user.student_info?.department,
+              class: user.student_info?.class,
+              generation: user.student_info?.generation,
+            }
+          : {}, // Use an empty object for non-students
     };
 
     const loadingToast = toast.loading("Creating user...");
@@ -109,7 +101,7 @@ export default function AddUserModal({
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify(userToSubmit),
+        body: JSON.stringify(userData),
       });
 
       if (!response.ok) {
@@ -124,19 +116,15 @@ export default function AddUserModal({
 
       onSubmit({
         username: data.user.username,
-        password: userToSubmit.password,
+        password: userData.password,
         name: data.user.profile.full_name,
         email: data.user.email,
         role: data.user.role as userRole,
         profile: data.user.profile,
         student_info:
-          userToSubmit.role === "student"
-            ? userToSubmit.student_info
-            : undefined,
+          userData.role === "student" ? userData.student_info : undefined,
         teacher_info:
-          userToSubmit.role === "teacher"
-            ? userToSubmit.teacher_info
-            : undefined,
+          userData.role === "teacher" ? userData.teacher_info : undefined,
       });
 
       onClose();
