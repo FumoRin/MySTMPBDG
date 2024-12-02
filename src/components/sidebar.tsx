@@ -1,7 +1,7 @@
 import React, { useContext, createContext, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Menu, ChevronLeft, MoreVertical, LogOut } from "lucide-react";
-import reactLogo from "../assets/react.svg";
+import reactLogo from "../assets/MYSTMBDG1.png";
 import { Modal } from "./auth/logout";
 import { useAuth } from "../context/authContext";
 
